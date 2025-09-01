@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QFileDialog, QMessageBox,
-    QTreeView, QToolBar, QInputDialog, QApplication, QFileSystemModel,
+    QTreeView, QToolBar, QInputDialog, QFileSystemModel,
     QStatusBar
 )
 from PySide6.QtCore import QDir, QModelIndex, Qt
@@ -16,6 +16,18 @@ class MainWindow(QMainWindow):
         super().__init__(parent)
         self.setWindowTitle("Organizador de Archivos")
         self.resize(1100, 700)
+        
+        # Estilo para la ventana principal
+        self.setStyleSheet("""
+            QMainWindow {
+                background-color: #1a202c;
+                color: #e2e8f0;
+            }
+            QWidget {
+                background-color: #1a202c;
+                color: #e2e8f0;
+            }
+        """)
 
         # Inicializar historial de navegación ANTES de usar set_root_path
         self._history: list[str] = []
@@ -26,7 +38,7 @@ class MainWindow(QMainWindow):
         self.model.setReadOnly(False)
         self.model.setFilter(QDir.Filter.AllEntries | QDir.Filter.NoDotAndDotDot)
 
-        # Vista de árbol
+        # Vista de árbol con estilos mejorados
         self.view = QTreeView(self)
         self.view.setModel(self.model)
         self.view.setSortingEnabled(True)
@@ -35,6 +47,58 @@ class MainWindow(QMainWindow):
         self.view.setUniformRowHeights(True)
         self.view.setWordWrap(False)
         self.view.doubleClicked.connect(self.on_double_clicked)
+        
+        # Estilos para la vista de archivos
+        self.view.setStyleSheet("""
+            QTreeView {
+                background-color: #1a202c;
+                color: #e2e8f0;
+                border: 1px solid #4a5568;
+                border-radius: 8px;
+                font-size: 13px;
+                gridline-color: #2d3748;
+                selection-background-color: rgba(66, 153, 225, 0.3);
+                selection-color: #ffffff;
+                alternate-background-color: #2d3748;
+            }
+            QTreeView::item {
+                padding: 6px;
+                border: none;
+            }
+            QTreeView::item:hover {
+                background-color: rgba(74, 85, 104, 0.5);
+            }
+            QTreeView::item:selected {
+                background-color: rgba(66, 153, 225, 0.4);
+                color: #ffffff;
+            }
+            QTreeView::item:selected:active {
+                background-color: rgba(66, 153, 225, 0.5);
+            }
+            QHeaderView::section {
+                background-color: #2d3748;
+                color: #e2e8f0;
+                padding: 8px;
+                border: 1px solid #4a5568;
+                font-weight: 600;
+            }
+            QHeaderView::section:hover {
+                background-color: #4a5568;
+            }
+            QScrollBar:vertical {
+                background: #2d3748;
+                width: 12px;
+                border-radius: 6px;
+            }
+            QScrollBar::handle:vertical {
+                background: #4a5568;
+                border-radius: 6px;
+                min-height: 20px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background: #718096;
+            }
+        """)
 
         # Layout principal
         central = QWidget(self)
@@ -42,8 +106,18 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.view)
         self.setCentralWidget(central)
         
-        # Agregar status bar
-        self.setStatusBar(QStatusBar())
+        # Agregar status bar con estilos
+        status_bar = QStatusBar()
+        status_bar.setStyleSheet("""
+            QStatusBar {
+                background-color: #2d3748;
+                color: #e2e8f0;
+                border-top: 1px solid #4a5568;
+                padding: 4px;
+                font-size: 12px;
+            }
+        """)
+        self.setStatusBar(status_bar)
 
         tb = QToolBar("Acciones", self)
         tb.setMovable(False)
@@ -51,84 +125,91 @@ class MainWindow(QMainWindow):
         tb.setIconSize(QSize(20, 20))
         tb.setStyleSheet("""
             QToolBar {
-                background: #f8f9fa;
-                border: 1px solid #dee2e6;
-                border-radius: 6px;
-                padding: 4px;
-                spacing: 2px;
+                background: #2d3748;
+                border: 1px solid #4a5568;
+                border-radius: 8px;
+                padding: 6px;
+                spacing: 3px;
             }
             QToolButton {
-                background: transparent;
-                border: 1px solid transparent;
-                border-radius: 4px;
-                padding: 6px 10px;
-                margin: 1px;
+                background: rgba(255, 255, 255, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                border-radius: 6px;
+                padding: 8px 12px;
+                margin: 2px;
                 font-size: 13px;
+                font-weight: 500;
+                color: #e2e8f0;
+                min-width: 80px;
             }
             QToolButton:hover {
-                background: #e9ecef;
-                border-color: #ced4da;
+                background: rgba(66, 153, 225, 0.3);
+                border-color: #4299e1;
+                color: #ffffff;
             }
             QToolButton:pressed {
-                background: #dee2e6;
+                background: rgba(66, 153, 225, 0.5);
+                border-color: #3182ce;
             }
             QToolButton:disabled {
-                color: #6c757d;
-                background: transparent;
+                color: #718096;
+                background: rgba(255, 255, 255, 0.05);
+                border-color: rgba(255, 255, 255, 0.1);
             }
             QToolBar::separator {
-                background: #dee2e6;
-                width: 1px;
-                margin: 4px 6px;
+                background: #4a5568;
+                width: 2px;
+                margin: 6px 8px;
+                border-radius: 1px;
             }
         """)
         self.addToolBar(tb)
 
-        # Crear acciones con iconos Unicode y mejores textos
-        act_open = QAction("Abrir carpeta", self)
+        # Crear acciones con símbolos Unicode para mejor identificación
+        act_open = QAction("📁 Abrir carpeta", self)
         act_open.setToolTip("Seleccionar una carpeta para navegar")
         act_open.triggered.connect(self.open_folder)
         tb.addAction(act_open)
 
-        act_rename = QAction("Renombrar", self)
+        act_rename = QAction("✏️ Renombrar", self)
         act_rename.setShortcut("F2")
         act_rename.setToolTip("Renombrar archivo o carpeta (F2)")
         act_rename.triggered.connect(self.rename_selected)
         tb.addAction(act_rename)
 
-        act_move = QAction("Mover", self)
+        act_move = QAction("📤 Mover", self)
         act_move.setToolTip("Mover archivo a otra ubicación")
         act_move.triggered.connect(self.move_selected)
         tb.addAction(act_move)
 
-        act_delete = QAction("Eliminar", self)
+        act_delete = QAction("🗑️ Eliminar", self)
         act_delete.setToolTip("Enviar archivo a la papelera")
         act_delete.triggered.connect(self.delete_selected)
         tb.addAction(act_delete)
 
-        act_refresh = QAction("Actualizar", self)
+        act_refresh = QAction("🔄 Actualizar", self)
         act_refresh.setToolTip("Actualizar vista de archivos")
         act_refresh.triggered.connect(self.refresh)
         tb.addAction(act_refresh)
 
         tb.addSeparator()
 
-        # Botones de navegación mejorados
-        self.back_btn = QAction("Atrás", self)
+        # Botones de navegación con símbolos Unicode
+        self.back_btn = QAction("◀ Atrás", self)
         self.back_btn.setShortcut("Alt+Left")
         self.back_btn.setToolTip("Ir a carpeta anterior (Alt+Left)")
         self.back_btn.triggered.connect(self.go_back)
         self.back_btn.setEnabled(False)
         tb.addAction(self.back_btn)
 
-        self.forward_btn = QAction("Adelante", self)
+        self.forward_btn = QAction("▶ Adelante", self)
         self.forward_btn.setShortcut("Alt+Right") 
         self.forward_btn.setToolTip("Ir a carpeta siguiente (Alt+Right)")
         self.forward_btn.triggered.connect(self.go_forward)
         self.forward_btn.setEnabled(False)
         tb.addAction(self.forward_btn)
 
-        self.up_btn = QAction("Subir", self)
+        self.up_btn = QAction("⬆ Subir", self)
         self.up_btn.setShortcut("Alt+Up")
         self.up_btn.setToolTip("Subir un nivel en la jerarquía (Alt+Up)")
         self.up_btn.triggered.connect(self.go_up)
@@ -136,7 +217,7 @@ class MainWindow(QMainWindow):
 
         tb.addSeparator()
 
-        act_pdf_processor = QAction("Procesar PDFs", self)
+        act_pdf_processor = QAction("📄 Procesar PDFs", self)
         act_pdf_processor.setToolTip("Procesar certificados y constancias laborales automáticamente")
         act_pdf_processor.triggered.connect(self.open_pdf_processor)
         tb.addAction(act_pdf_processor)
