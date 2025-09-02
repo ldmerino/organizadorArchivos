@@ -15,7 +15,7 @@ class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Organizador de Archivos")
-        self.resize(1100, 700)
+        self.resize(1300, 700)
         
         # Estilo para la ventana principal
         self.setStyleSheet("""

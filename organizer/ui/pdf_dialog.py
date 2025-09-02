@@ -26,6 +26,14 @@ class PDFProcessorDialog(QDialog):
         self.setMinimumSize(1000, 650)
         self.resize(1200, 770)
         
+        # Aplicar estilos del programa al diálogo
+        self.setStyleSheet(f"""
+            QDialog {{
+                background-color: {UIStyles.COLORS['bg']};
+                color: {UIStyles.COLORS['text']};
+            }}
+        """)
+        
         self.results: List[ProcessResult] = []
         self.worker_thread = None
         
@@ -356,6 +364,10 @@ class PDFProcessorDialog(QDialog):
         
         # Cambiar a pestaña de resultados
         self.tab_widget.setCurrentIndex(1)
+        
+        # Asegurar que la tabla sea visible y se ajuste correctamente
+        self.results_tab.results_table.show()
+        self.results_tab.results_table.resizeColumnsToContents()
     
     def handle_error(self, error_msg: str):
         """Manejar errores del procesamiento"""

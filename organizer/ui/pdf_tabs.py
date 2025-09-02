@@ -6,15 +6,13 @@ from typing import List
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QGroupBox,
     QLabel, QLineEdit, QPushButton, QFileDialog, QComboBox,
-    QCheckBox, QTextEdit, QTableWidget, QTableWidgetItem,
-    QScrollArea, QFrame, QMessageBox
+    QTextEdit, QTableWidget, QTableWidgetItem,
+    QScrollArea, QFrame
 )
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont, QColor
+from PySide6.QtGui import QColor
 
 from .styles import UIStyles
 from ..processors.pdf_processor import ProcessResult
-from ..processors.pdf_thread import PDFProcessorThread
 
 
 class ConfigurationTab(QWidget):
@@ -22,6 +20,13 @@ class ConfigurationTab(QWidget):
     
     def __init__(self, parent=None):
         super().__init__(parent)
+        # Aplicar estilos base al widget
+        self.setStyleSheet(f"""
+            QWidget {{
+                background-color: {UIStyles.COLORS['bg']};
+                color: {UIStyles.COLORS['text']};
+            }}
+        """)
         self.setup_ui()
     
     def setup_ui(self):
@@ -33,9 +38,21 @@ class ConfigurationTab(QWidget):
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
         scroll_area.setFrameShape(QFrame.Shape.NoFrame)
+        scroll_area.setStyleSheet(f"""
+            QScrollArea {{
+                background-color: {UIStyles.COLORS['bg']};
+                border: none;
+            }}
+        """)
         scroll_widget = QWidget()
+        scroll_widget.setStyleSheet(f"""
+            QWidget {{
+                background-color: {UIStyles.COLORS['bg']};
+            }}
+        """)
         layout = QVBoxLayout(scroll_widget)
-        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setContentsMargins(15, 15, 15, 15)
+        layout.setSpacing(20)
         
         # Grupo: Archivos de entrada
         input_group = QGroupBox("Archivos de Entrada")
@@ -43,7 +60,9 @@ class ConfigurationTab(QWidget):
         input_layout = QGridLayout(input_group)
         input_layout.setSpacing(10)
         
-        input_layout.addWidget(QLabel("Carpeta/Archivo:"), 0, 0)
+        label_archivo = QLabel("Carpeta/Archivo:")
+        label_archivo.setStyleSheet(UIStyles.get_label_style())
+        input_layout.addWidget(label_archivo, 0, 0)
         self.input_path = QLineEdit()
         self.input_path.setPlaceholderText("Selecciona la carpeta o archivo PDF a procesar...")
         self.input_path.setStyleSheet(UIStyles.get_input_style())
@@ -56,7 +75,9 @@ class ConfigurationTab(QWidget):
         input_layout.addWidget(self.browse_input_btn, 0, 2)
         
         # Tipo de procesamiento
-        input_layout.addWidget(QLabel("Tipo de proceso:"), 1, 0)
+        label_tipo = QLabel("Tipo de proceso:")
+        label_tipo.setStyleSheet(UIStyles.get_label_style())
+        input_layout.addWidget(label_tipo, 1, 0)
         self.process_type = QComboBox()
         self.process_type.addItems([
             "Separar PDF multi-página → archivos individuales",
@@ -78,7 +99,9 @@ class ConfigurationTab(QWidget):
         output_layout = QGridLayout(output_group)
         output_layout.setSpacing(10)
         
-        output_layout.addWidget(QLabel("Carpeta destino:"), 0, 0)
+        label_destino = QLabel("Carpeta destino:")
+        label_destino.setStyleSheet(UIStyles.get_label_style())
+        output_layout.addWidget(label_destino, 0, 0)
         self.output_path = QLineEdit()
         self.output_path.setPlaceholderText("Carpeta donde se guardarán los archivos procesados...")
         self.output_path.setStyleSheet(UIStyles.get_input_style())
@@ -216,6 +239,13 @@ class ResultsTab(QWidget):
     
     def __init__(self, parent=None):
         super().__init__(parent)
+        # Aplicar estilos base al widget
+        self.setStyleSheet(f"""
+            QWidget {{
+                background-color: {UIStyles.COLORS['bg']};
+                color: {UIStyles.COLORS['text']};
+            }}
+        """)
         self.setup_ui()
         
     def setup_ui(self):
@@ -224,7 +254,7 @@ class ResultsTab(QWidget):
         
         # Resumen estadístico
         self.summary_label = QLabel("Sin resultados aún")
-        self.summary_label.setStyleSheet("font-weight: bold; padding: 10px; background-color: #e8f4fd;")
+        self.summary_label.setStyleSheet(UIStyles.get_status_style())
         layout.addWidget(self.summary_label)
         
         # Tabla de resultados
@@ -233,11 +263,29 @@ class ResultsTab(QWidget):
             "Archivo Original", "Nuevo Nombre", "Trabajador", "Estado", "Error"
         ])
         self.results_table.horizontalHeader().setStretchLastSection(True)
+        self.results_table.setStyleSheet(UIStyles.get_table_style())
         layout.addWidget(self.results_table)
         
     def update_results(self, results: List[ProcessResult]):
         """Actualizar tabla con nuevos resultados"""
+        # Asegurar que tenemos una lista válida
+        if not results:
+            results = []
+        
         self.results_table.setRowCount(len(results))
+        
+        # Si no hay resultados, mostrar mensaje informativo
+        if len(results) == 0:
+            self.results_table.setRowCount(1)
+            item = QTableWidgetItem("No hay resultados para mostrar")
+            item.setBackground(QColor(UIStyles.COLORS['bg_subtle']))
+            self.results_table.setItem(0, 0, item)
+            # Vaciar las otras columnas
+            for j in range(1, 5):
+                empty_item = QTableWidgetItem("")
+                empty_item.setBackground(QColor(UIStyles.COLORS['bg_subtle']))
+                self.results_table.setItem(0, j, empty_item)
+            return
         
         for i, result in enumerate(results):
             self.results_table.setItem(i, 0, QTableWidgetItem(result.original_file))
@@ -246,11 +294,11 @@ class ResultsTab(QWidget):
             self.results_table.setItem(i, 3, QTableWidgetItem("Exitoso" if result.success else "Error"))
             self.results_table.setItem(i, 4, QTableWidgetItem(result.error or ""))
             
-            # Colorear filas según resultado
+            # Colorear filas según resultado usando colores del programa
             if result.success:
-                color = QColor("#d4edda")  # Verde claro
+                color = QColor(UIStyles.COLORS['success_bg'])  # Verde claro para éxito
             else:
-                color = QColor("#f8d7da")  # Rojo claro
+                color = QColor(UIStyles.COLORS['danger_bg'])   # Rojo claro para error
                 
             for j in range(5):
                 self.results_table.item(i, j).setBackground(color)
@@ -273,6 +321,13 @@ class PreviewTab(QWidget):
     
     def __init__(self, parent=None):
         super().__init__(parent)
+        # Aplicar estilos base al widget
+        self.setStyleSheet(f"""
+            QWidget {{
+                background-color: {UIStyles.COLORS['bg']};
+                color: {UIStyles.COLORS['text']};
+            }}
+        """)
         self.setup_ui()
         
     def setup_ui(self):
@@ -283,13 +338,13 @@ class PreviewTab(QWidget):
         info_layout = QHBoxLayout()
         
         preview_label = QLabel("Vista previa del procesamiento:")
-        preview_label.setStyleSheet("font-weight: bold; font-size: 14px; color: #2c3e50;")
+        preview_label.setStyleSheet(f"font-weight: bold; font-size: 14px; color: {UIStyles.COLORS['text']};")
         info_layout.addWidget(preview_label)
         
         info_layout.addStretch()
         
         help_label = QLabel("Tip: Revisa los nombres detectados antes de procesar")
-        help_label.setStyleSheet("color: #7f8c8d; font-style: italic;")
+        help_label.setStyleSheet(f"color: {UIStyles.COLORS['muted']}; font-style: italic;")
         info_layout.addWidget(help_label)
         
         layout.addLayout(info_layout)
